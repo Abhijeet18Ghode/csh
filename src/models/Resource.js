@@ -1,18 +1,51 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const resourceSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
+    trim: true,
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: [
+      'career-guidance',
+      'technical-skills',
+      'soft-skills',
+      'interview-preparation',
+      'resume-building',
+    ],
   },
   type: {
     type: String,
-    enum: ['interview', 'resume', 'study', 'referral'],
     required: true,
+    enum: ['link', 'document', 'video'],
+  },
+  url: {
+    type: String,
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return this.type !== 'link' || /^https?:\/\/.+\..+/.test(v);
+      },
+      message: 'URL is required for link type resources',
+    },
   },
   content: {
     type: String,
-    required: true,
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return this.type !== 'document' || v.length > 0;
+      },
+      message: 'Content is required for document type resources',
+    },
   },
   tags: [String],
   uploadedBy: {
@@ -60,6 +93,9 @@ const resourceSchema = new mongoose.Schema({
   },
 });
 
-const Resource = mongoose.models.Resource || mongoose.model('Resource', resourceSchema);
+resourceSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
-export default Resource; 
+module.exports = mongoose.models.Resource || mongoose.model('Resource', resourceSchema); 

@@ -19,7 +19,7 @@ export async function PUT(req, { params }) {
       params.userId,
       { verified: true },
       { new: true }
-    );
+    ).select('-password');
 
     if (!user) {
       return new Response(JSON.stringify({ error: 'User not found' }), {

@@ -2,63 +2,74 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { FaUsers, FaFileAlt, FaCalendar, FaComments, FaCog } from 'react-icons/fa';
 import Link from 'next/link';
-import { FaUsers, FaBook, FaCalendarAlt, FaUserTie, FaCog } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
 
 export default function AdminLayout({ children }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (session?.user?.role !== 'admin') {
-      router.push('/auth/signin');
+    if (status === 'loading') {
+      setIsLoading(true);
+    } else if (status === 'unauthenticated') {
+      router.push('/signin');
+    } else if (session?.user?.role !== 'admin') {
+      router.push('/');
+    } else {
+      setIsLoading(false);
     }
-  }, [session, router]);
+  }, [session, status, router]);
 
-  if (!session || session.user.role !== 'admin') {
-    return null;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
-        <div className="flex items-center justify-center h-16 bg-indigo-600">
-          <h1 className="text-white text-xl font-bold">Admin Dashboard</h1>
+      <div className="w-64 bg-white shadow-lg">
+        <div className="p-4">
+          <h1 className="text-xl font-bold text-indigo-600">Admin Dashboard</h1>
         </div>
-        <nav className="mt-5">
+        <nav className="mt-4">
           <Link
             href="/admin/dashboard"
-            className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
+            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
             <FaUsers className="mr-3" />
             Users
           </Link>
           <Link
             href="/admin/resources"
-            className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
+            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
-            <FaBook className="mr-3" />
+            <FaFileAlt className="mr-3" />
             Resources
           </Link>
           <Link
             href="/admin/events"
-            className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
+            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
-            <FaCalendarAlt className="mr-3" />
+            <FaCalendar className="mr-3" />
             Events
           </Link>
           <Link
             href="/admin/mentorships"
-            className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
+            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
-            <FaUserTie className="mr-3" />
+            <FaComments className="mr-3" />
             Mentorships
           </Link>
           <Link
             href="/admin/settings"
-            className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
+            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
             <FaCog className="mr-3" />
             Settings
@@ -66,9 +77,11 @@ export default function AdminLayout({ children }) {
         </nav>
       </div>
 
-      {/* Main content */}
-      <div className="ml-64 p-8">
-        {children}
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-6">
+          {children}
+        </div>
       </div>
     </div>
   );
