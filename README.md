@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# AlumNet - Career Support Platform
+
+A platform where verified alumni can share placement resources, and students can browse, bookmark, and request mentorship. Admins manage the platform.
+
+## Features
+
+- Role-based access control (Admin, Alumni, Student)
+- Resource sharing (interview experiences, resume templates, study materials)
+- Mentorship system
+- Event management
+- Company insights
+- Email notifications
+- Analytics dashboard
+
+## Tech Stack
+
+- Frontend & Backend: Next.js (JavaScript)
+- Database: MongoDB (Mongoose)
+- Authentication: NextAuth
+- Styling: Tailwind CSS
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js (v14 or later)
+- MongoDB
+- SMTP server for email functionality
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/alumnet.git
+   cd alumnet
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env` file in the root directory with the following variables:
+   ```
+   MONGODB_URI=mongodb://localhost:27017/alumnet
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your-secret-key-here
+   EMAIL_SERVER_HOST=smtp.example.com
+   EMAIL_SERVER_PORT=587
+   EMAIL_SERVER_USER=your-email@example.com
+   EMAIL_SERVER_PASSWORD=your-email-password
+   EMAIL_FROM=noreply@alumnet.com
+   COLLEGE_EMAIL_DOMAIN=college.edu
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Project Structure
+
+```
+src/
+├── app/                 # Next.js App Router
+├── components/          # React components
+├── lib/                 # Utility functions
+├── models/              # MongoDB models
+├── middleware.js        # Authentication middleware
+└── styles/              # Global styles
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## User Roles
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Admin
+- Full control over users, content, and platform settings
+- Content moderation
+- Analytics dashboard
+- User management
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Alumni
+- Upload interview experiences
+- Offer referrals
+- Host events
+- Mentor students
 
-## Learn More
+### Student
+- Browse resources
+- Request referrals
+- Join events
+- Request mentorship
 
-To learn more about Next.js, take a look at the following resources:
+## Contributing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
