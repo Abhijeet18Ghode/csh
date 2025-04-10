@@ -61,7 +61,7 @@ export default function AdminLayout({ children }) {
             Events
           </Link>
           <Link
-            href="/admin/mentorships"
+            href="/admin/dashboard/mentorships"
             className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
             <FaComments className="mr-3" />
