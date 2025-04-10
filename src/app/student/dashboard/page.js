@@ -21,6 +21,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import Link from 'next/link';
 
 ChartJS.register(
   CategoryScale,
@@ -43,22 +44,75 @@ export default function StudentDashboard() {
     labels: [],
     datasets: [],
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const response = await fetch('/api/student/dashboard');
+        if (!response.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
         const data = await response.json();
         
-        setStats(data.stats);
-        setChartData(data.chartData);
+        setStats(data.stats || {
+          savedResources: 0,
+          activeMentorships: 0,
+          upcomingEvents: 0,
+          totalAlumni: 0,
+        });
+        setChartData(data.chartData || {
+          labels: [],
+          datasets: [],
+        });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        setError(error.message);
+        setStats({
+          savedResources: 0,
+          activeMentorships: 0,
+          upcomingEvents: 0,
+          totalAlumni: 0,
+        });
+        setChartData({
+          labels: [],
+          datasets: [],
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchDashboardData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-red-600 mb-2">Error</h2>
+          <p className="text-gray-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -87,7 +141,7 @@ export default function StudentDashboard() {
                     </dt>
                     <dd className="flex items-baseline">
                       <div className="text-2xl font-semibold text-gray-900">
-                        {stats.savedResources}
+                        {stats?.savedResources || 0}
                       </div>
                     </dd>
                   </dl>
@@ -109,7 +163,7 @@ export default function StudentDashboard() {
                     </dt>
                     <dd className="flex items-baseline">
                       <div className="text-2xl font-semibold text-gray-900">
-                        {stats.activeMentorships}
+                        {stats?.activeMentorships || 0}
                       </div>
                     </dd>
                   </dl>
@@ -131,7 +185,7 @@ export default function StudentDashboard() {
                     </dt>
                     <dd className="flex items-baseline">
                       <div className="text-2xl font-semibold text-gray-900">
-                        {stats.upcomingEvents}
+                        {stats?.upcomingEvents || 0}
                       </div>
                     </dd>
                   </dl>
@@ -153,7 +207,7 @@ export default function StudentDashboard() {
                     </dt>
                     <dd className="flex items-baseline">
                       <div className="text-2xl font-semibold text-gray-900">
-                        {stats.totalAlumni}
+                        {stats?.totalAlumni || 0}
                       </div>
                     </dd>
                   </dl>
@@ -191,8 +245,8 @@ export default function StudentDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <button
-            onClick={() => window.location.href = '/resources'}
+          <Link
+            href="/student/resources"
             className="bg-white shadow rounded-lg p-6 hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center">
@@ -208,10 +262,10 @@ export default function StudentDashboard() {
                 </p>
               </div>
             </div>
-          </button>
+          </Link>
 
-          <button
-            onClick={() => window.location.href = '/mentorship'}
+          <Link
+            href="/student/mentors"
             className="bg-white shadow rounded-lg p-6 hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center">
@@ -227,10 +281,10 @@ export default function StudentDashboard() {
                 </p>
               </div>
             </div>
-          </button>
+          </Link>
 
-          <button
-            onClick={() => window.location.href = '/events'}
+          <Link
+            href="/student/events"
             className="bg-white shadow rounded-lg p-6 hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center">
@@ -246,7 +300,7 @@ export default function StudentDashboard() {
                 </p>
               </div>
             </div>
-          </button>
+          </Link>
         </div>
       </div>
     </div>

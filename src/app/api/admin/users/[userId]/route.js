@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import bcrypt from 'bcryptjs';
 
 export async function GET(req, { params }) {
   try {
@@ -49,7 +50,7 @@ export async function PUT(req, { params }) {
     }
 
     const body = await req.json();
-    const { name, email, role } = body;
+    const { name, email, role, profile, password, verified } = body;
 
     await connectDB();
     const user = await User.findById(params.userId);
@@ -62,7 +63,7 @@ export async function PUT(req, { params }) {
     }
 
     // Check if email is already taken by another user
-    if (email !== user.email) {
+    if (email && email !== user.email) {
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         return new Response(JSON.stringify({ error: 'Email already in use' }), {
@@ -70,14 +71,34 @@ export async function PUT(req, { params }) {
           headers: { 'Content-Type': 'application/json' },
         });
       }
+      user.email = email;
     }
 
-    user.name = name;
-    user.email = email;
-    user.role = role;
+    // Update basic user info
+    if (name) user.name = name;
+    if (role) user.role = role;
+    if (verified !== undefined) user.verified = verified;
+
+    // Update profile if provided
+    if (profile) {
+      user.profile = {
+        ...user.profile,
+        ...profile,
+      };
+    }
+
+    // Update password if provided
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
+    }
+
     await user.save();
 
-    return new Response(JSON.stringify({ message: 'User updated successfully' }), {
+    // Return updated user without password
+    const updatedUser = user.toObject();
+    delete updatedUser.password;
+
+    return new Response(JSON.stringify(updatedUser), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });

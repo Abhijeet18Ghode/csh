@@ -1,7 +1,10 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectToDatabase } from '@/lib/mongodb';
-import { ObjectId } from 'mongodb';
+import { connectDB } from '@/lib/db';
+import User from '@/models/User';
+import MentorshipSession from '@/models/MentorshipSession';
+import Resource from '@/models/Resource';
+import Event from '@/models/Event';
 
 export async function GET() {
   try {
@@ -14,28 +17,28 @@ export async function GET() {
       });
     }
 
-    const { db } = await connectToDatabase();
+    await connectDB();
     const userId = session.user.id;
 
     // Get saved resources count
-    const savedResources = await db.collection('saved_resources').countDocuments({
-      userId: new ObjectId(userId),
+    const savedResources = await Resource.countDocuments({
+      savedBy: userId,
     });
 
     // Get active mentorships count
-    const activeMentorships = await db.collection('mentorships').countDocuments({
-      studentId: new ObjectId(userId),
+    const activeMentorships = await MentorshipSession.countDocuments({
+      studentId: userId,
       status: 'active',
     });
 
     // Get upcoming events count
     const now = new Date();
-    const upcomingEvents = await db.collection('events').countDocuments({
+    const upcomingEvents = await Event.countDocuments({
       startDate: { $gte: now },
     });
 
     // Get total alumni count
-    const totalAlumni = await db.collection('users').countDocuments({
+    const totalAlumni = await User.countDocuments({
       role: 'alumni',
     });
 
@@ -67,54 +70,48 @@ export async function GET() {
     }
 
     // Get resource views data
-    const resourceViews = await db
-      .collection('resource_views')
-      .aggregate([
-        {
-          $match: {
-            userId: new ObjectId(userId),
-            viewedAt: { $gte: sixMonthsAgo },
+    const resourceViews = await Resource.aggregate([
+      {
+        $match: {
+          viewedBy: userId,
+          viewedAt: { $gte: sixMonthsAgo },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$viewedAt' },
+            year: { $year: '$viewedAt' },
           },
+          count: { $sum: 1 },
         },
-        {
-          $group: {
-            _id: {
-              month: { $month: '$viewedAt' },
-              year: { $year: '$viewedAt' },
-            },
-            count: { $sum: 1 },
-          },
-        },
-        {
-          $sort: { '_id.year': 1, '_id.month': 1 },
-        },
-      ])
-      .toArray();
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 },
+      },
+    ]);
 
     // Get mentorship sessions data
-    const mentorshipSessions = await db
-      .collection('mentorship_sessions')
-      .aggregate([
-        {
-          $match: {
-            studentId: new ObjectId(userId),
-            date: { $gte: sixMonthsAgo },
+    const mentorshipSessions = await MentorshipSession.aggregate([
+      {
+        $match: {
+          studentId: userId,
+          date: { $gte: sixMonthsAgo },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$date' },
+            year: { $year: '$date' },
           },
+          count: { $sum: 1 },
         },
-        {
-          $group: {
-            _id: {
-              month: { $month: '$date' },
-              year: { $year: '$date' },
-            },
-            count: { $sum: 1 },
-          },
-        },
-        {
-          $sort: { '_id.year': 1, '_id.month': 1 },
-        },
-      ])
-      .toArray();
+      },
+      {
+        $sort: { '_id.year': 1, '_id.month': 1 },
+      },
+    ]);
 
     // Fill in the chart data
     const currentDate = new Date();

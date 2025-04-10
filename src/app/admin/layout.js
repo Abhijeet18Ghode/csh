@@ -47,7 +47,7 @@ export default function AdminLayout({ children }) {
             Users
           </Link>
           <Link
-            href="/admin/resources"
+            href="/admin/dashboard/resources"
             className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
             <FaFileAlt className="mr-3" />

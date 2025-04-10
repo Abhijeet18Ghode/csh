@@ -179,19 +179,27 @@ export default function AdminDashboard() {
   const handleEditUser = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`/api/admin/users/${editUser._id}`, {
-        method: 'PUT',
+      const endpoint = editUser._id 
+        ? `/api/admin/users/${editUser._id}`
+        : '/api/admin/users';
+      
+      const response = await fetch(endpoint, {
+        method: editUser._id ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(editUser),
       });
+
       if (response.ok) {
         setShowEditModal(false);
         fetchUsers();
+      } else {
+        const errorData = await response.json();
+        console.error('Error updating/creating user:', errorData);
       }
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('Error updating/creating user:', error);
     }
   };
 
@@ -340,250 +348,290 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">User Management</h1>
+      {/* User Management Section */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-medium text-gray-900">User Management</h2>
+            <button
+              onClick={() => {
+                setEditUser({
+                  name: '',
+                  email: '',
+                  password: '',
+                  role: 'student',
+                  profile: {},
+                });
+                setShowEditModal(true);
+              }}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Add New User
+            </button>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <FaSearch className="absolute right-3 top-3 text-gray-400" />
+            </div>
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="all">All Roles</option>
+              <option value="student">Students</option>
+              <option value="alumni">Alumni/Mentors</option>
+              <option value="admin">Admins</option>
+            </select>
+          </div>
+
+          {/* Bulk Actions */}
           {selectedUsers.length > 0 && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-4">
               <button
                 onClick={handleBulkVerify}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
+                <FaCheck className="mr-2" />
                 Verify Selected
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
+                <FaTrash className="mr-2" />
                 Delete Selected
               </button>
             </div>
           )}
-        </div>
-        
-        {/* Filters */}
-        <div className="mb-6 flex gap-4">
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
-          </div>
-          <select
-            className="border rounded-lg px-4 py-2"
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-          >
-            <option value="all">All Roles</option>
-            <option value="student">Students</option>
-            <option value="alumni">Alumni</option>
-            <option value="admin">Admins</option>
-          </select>
-        </div>
 
-        {/* Users Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+          {/* Users Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <input
                       type="checkbox"
-                      checked={selectedUsers.includes(user._id)}
-                      onChange={() => handleSelectUser(user._id)}
+                      checked={selectedUsers.length === filteredUsers.length}
+                      onChange={handleSelectAll}
                       className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div 
-                      className="text-sm font-medium text-gray-900 cursor-pointer hover:text-indigo-600"
-                      onClick={() => {
-                        setViewUser(user);
-                        setShowUserModal(true);
-                      }}
-                    >
-                      {user.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{user.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                      user.role === 'alumni' ? 'bg-green-100 text-green-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {user.verified ? 'Verified' : 'Pending'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-3">
-                      <button
-                        onClick={() => {
-                          setEditUser(user);
-                          setShowEditModal(true);
-                        }}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        <FaEdit />
-                      </button>
-                      {!user.verified && (
-                        <button
-                          onClick={() => handleVerifyUser(user._id)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          <FaCheck />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteUser(user._id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </td>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredUsers.map((user) => (
+                  <tr key={user._id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(user._id)}
+                        onChange={() => handleSelectUser(user._id)}
+                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <FaUser className="h-10 w-10 text-gray-400" />
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                          user.role === 'alumni' ? 'bg-green-100 text-green-800' :
+                          'bg-blue-100 text-blue-800'}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${user.verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                        {user.verified ? 'Verified' : 'Pending'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => {
+                            setEditUser(user);
+                            setShowEditModal(true);
+                          }}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          <FaEdit />
+                        </button>
+                        {!user.verified && (
+                          <button
+                            onClick={() => handleVerifyUser(user._id)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            <FaCheck />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteUser(user._id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       {/* Edit User Modal */}
-      {showEditModal && editUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Edit User</h3>
-              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-500">
-                <FaTimes />
-              </button>
-            </div>
+      {showEditModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              {editUser._id ? 'Edit User' : 'Add New User'}
+            </h3>
             <form onSubmit={handleEditUser}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Name
+                  </label>
                   <input
                     type="text"
                     value={editUser.name}
-                    onChange={(e) => setEditUser({...editUser, name: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
                   <input
                     type="email"
                     value={editUser.email}
-                    onChange={(e) => setEditUser({...editUser, email: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Role</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Role
+                  </label>
                   <select
                     value={editUser.role}
-                    onChange={(e) => setEditUser({...editUser, role: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    required
                   >
                     <option value="student">Student</option>
-                    <option value="alumni">Alumni</option>
+                    <option value="alumni">Alumni/Mentor</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowEditModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
-                  >
-                    Save Changes
-                  </button>
+                {!editUser._id && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={editUser.password}
+                      onChange={(e) => setEditUser({ ...editUser, password: e.target.value })}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      required={!editUser._id}
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Profile
+                  </label>
+                  <div className="mt-1 space-y-2">
+                    <input
+                      type="text"
+                      placeholder="College"
+                      value={editUser.profile?.college || ''}
+                      onChange={(e) => setEditUser({
+                        ...editUser,
+                        profile: { ...editUser.profile, college: e.target.value }
+                      })}
+                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Current Company"
+                      value={editUser.profile?.currentCompany || ''}
+                      onChange={(e) => setEditUser({
+                        ...editUser,
+                        profile: { ...editUser.profile, currentCompany: e.target.value }
+                      })}
+                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Position"
+                      value={editUser.profile?.position || ''}
+                      onChange={(e) => setEditUser({
+                        ...editUser,
+                        profile: { ...editUser.profile, position: e.target.value }
+                      })}
+                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
                 </div>
               </div>
+              <div className="mt-5 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  {editUser._id ? 'Update' : 'Create'}
+                </button>
+              </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* View User Modal */}
-      {showUserModal && viewUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">User Details</h3>
-              <button onClick={() => setShowUserModal(false)} className="text-gray-400 hover:text-gray-500">
-                <FaTimes />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <FaUser className="text-gray-400" />
-                <span className="text-gray-900">{viewUser.name}</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <FaEnvelope className="text-gray-400" />
-                <span className="text-gray-900">{viewUser.email}</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <FaGraduationCap className="text-gray-400" />
-                <span className="text-gray-900">{viewUser.role}</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  viewUser.verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {viewUser.verified ? 'Verified' : 'Pending'}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       )}

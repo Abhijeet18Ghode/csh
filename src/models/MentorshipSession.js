@@ -13,7 +13,7 @@ const mentorshipSessionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'accepted', 'rejected', 'completed'],
+    enum: ['pending', 'accepted', 'rejected', 'completed', 'cancelled'],
     default: 'pending',
   },
   sessionDetails: {
@@ -26,11 +26,19 @@ const mentorshipSessionSchema = new mongoose.Schema({
     },
     meetingLink: String,
     agenda: String,
+    location: String, // For offline sessions
   },
   feedback: {
-    rating: Number,
-    comment: String,
-    submittedAt: Date,
+    mentorFeedback: {
+      rating: Number,
+      comment: String,
+      submittedAt: Date,
+    },
+    studentFeedback: {
+      rating: Number,
+      comment: String,
+      submittedAt: Date,
+    },
   },
   messages: [{
     sender: {
@@ -43,6 +51,22 @@ const mentorshipSessionSchema = new mongoose.Schema({
       default: Date.now,
     },
   }],
+  permissions: {
+    student: {
+      canCancel: { type: Boolean, default: true },
+      canReschedule: { type: Boolean, default: true },
+      canProvideFeedback: { type: Boolean, default: true },
+    },
+    mentor: {
+      canCancel: { type: Boolean, default: true },
+      canReschedule: { type: Boolean, default: true },
+      canProvideFeedback: { type: Boolean, default: true },
+    },
+    admin: {
+      canModify: { type: Boolean, default: true },
+      canDelete: { type: Boolean, default: true },
+    },
+  },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -52,6 +76,11 @@ const mentorshipSessionSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Add indexes for better query performance
+mentorshipSessionSchema.index({ mentorId: 1, status: 1 });
+mentorshipSessionSchema.index({ studentId: 1, status: 1 });
+mentorshipSessionSchema.index({ status: 1 });
 
 const MentorshipSession = mongoose.models.MentorshipSession || mongoose.model('MentorshipSession', mentorshipSessionSchema);
 

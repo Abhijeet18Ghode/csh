@@ -4,58 +4,43 @@ const eventSchema = new mongoose.Schema({
   title: {
     type: String,
     required: true,
-  },
-  type: {
-    type: String,
-    enum: ['webinar', 'workshop', 'networking', 'career_fair'],
-    required: true,
+    trim: true,
   },
   description: {
     type: String,
     required: true,
   },
-  host: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+  category: {
+    type: String,
+    required: true,
+    enum: ['workshop', 'webinar', 'networking', 'conference'],
+  },
+  startDate: {
+    type: Date,
     required: true,
   },
-  date: {
-    start: {
-      type: Date,
-      required: true,
-    },
-    end: {
-      type: Date,
-      required: true,
-    },
+  endDate: {
+    type: Date,
+    required: true,
   },
   location: {
     type: String,
     required: true,
   },
-  mode: {
-    type: String,
-    enum: ['online', 'offline', 'hybrid'],
+  maxParticipants: {
+    type: Number,
+    required: true,
+    min: 1,
+  },
+  attendees: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
   },
-  meetingLink: String,
-  maxParticipants: Number,
-  participants: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-    registeredAt: {
-      type: Date,
-      default: Date.now,
-    },
-  }],
-  status: {
-    type: String,
-    enum: ['upcoming', 'ongoing', 'completed', 'cancelled'],
-    default: 'upcoming',
-  },
-  tags: [String],
   createdAt: {
     type: Date,
     default: Date.now,
@@ -66,6 +51,17 @@ const eventSchema = new mongoose.Schema({
   },
 });
 
-const Event = mongoose.models.Event || mongoose.model('Event', eventSchema);
+// Update the updatedAt field before saving
+eventSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
+// Delete the old model if it exists
+if (mongoose.models.Event) {
+  delete mongoose.models.Event;
+}
+
+// Create the new model
+const Event = mongoose.model('Event', eventSchema);
 export default Event; 
