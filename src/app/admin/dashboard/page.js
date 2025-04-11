@@ -1,5 +1,20 @@
 'use client';
 
+// import { useSession } from 'next-auth/react';
+// import { useEffect, useState } from 'react';
+// import { FiUsers, FiFileText, FiCalendar, FiMessageSquare, FiBook, FiVideo, FiClock } from 'react-icons/fi';
+// import { Bar } from 'react-chartjs-2';
+// import {
+//   Chart as ChartJS,
+//   CategoryScale,
+//   LinearScale,
+//   BarElement,
+//   Title,
+//   Tooltip,
+//   Legend,
+// } from 'chart.js';
+
+
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { FiUsers, FiFileText, FiCalendar, FiMessageSquare } from 'react-icons/fi';
@@ -14,6 +29,8 @@ import {
   Legend,
 } from 'chart.js';
 import { FaSearch, FaEdit, FaTrash, FaCheck, FaTimes, FaUser, FaEnvelope, FaPhone, FaGraduationCap } from 'react-icons/fa';
+import MeetingStream from '@/components/MeetingStream';
+import { useRouter } from 'next/navigation';
 
 ChartJS.register(
   CategoryScale,
@@ -58,6 +75,9 @@ export default function AdminDashboard() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const [viewUser, setViewUser] = useState(null);
+  const [activeMeeting, setActiveMeeting] = useState(null);
+  const [events, setEvents] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     // Fetch dashboard data
@@ -77,6 +97,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchUsers();
+    fetchEvents();
   }, []);
 
   const fetchUsers = async () => {
@@ -90,6 +111,17 @@ export default function AdminDashboard() {
       console.error('Error fetching users:', error);
       setUsers([]); // Set to empty array on error
       setLoading(false);
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch('/api/events');
+      if (!response.ok) throw new Error('Failed to fetch events');
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
     }
   };
 
@@ -202,6 +234,28 @@ export default function AdminDashboard() {
       console.error('Error updating/creating user:', error);
     }
   };
+
+  const startMeeting = (event) => {
+    if (event.type === 'online' || event.type === 'hybrid') {
+      setActiveMeeting(event);
+    }
+  };
+
+  const stopMeeting = () => {
+    setActiveMeeting(null);
+  };
+
+  // Filter meetings inside the component
+  const upcomingMeetings = events.filter(event => 
+    (event.type === 'online' || event.type === 'hybrid') && 
+    new Date(event.startDate) > new Date()
+  );
+
+  const activeMeetings = events.filter(event => 
+    (event.type === 'online' || event.type === 'hybrid') && 
+    new Date(event.startDate) <= new Date() && 
+    new Date(event.endDate) >= new Date()
+  );
 
   if (loading) {
     return (
@@ -632,6 +686,104 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Meetings Section */}
+      <div className="bg-white shadow rounded-lg p-6 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Manage Meetings</h2>
+          <button
+            onClick={() => router.push('/admin/dashboard/events')}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+          >
+            <FiCalendar className="mr-2 h-5 w-5" />
+            View All Events
+          </button>
+        </div>
+
+        {/* Active Meetings */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Active Meetings</h3>
+          {activeMeetings.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4">
+              {activeMeetings.map((event) => (
+                <div key={event._id} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900">{event.title}</h4>
+                      <p className="text-sm text-gray-500">
+                        {new Date(event.startDate).toLocaleString()} - {new Date(event.endDate).toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {event.attendees.length} / {event.maxParticipants} participants
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => startMeeting(event)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
+                    >
+                      <FiVideo className="mr-2 h-5 w-5" />
+                      Join Meeting
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No active meetings</p>
+          )}
+        </div>
+
+        {/* Upcoming Meetings */}
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Upcoming Meetings</h3>
+          {upcomingMeetings.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4">
+              {upcomingMeetings.map((event) => (
+                <div key={event._id} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900">{event.title}</h4>
+                      <p className="text-sm text-gray-500">
+                        {new Date(event.startDate).toLocaleString()} - {new Date(event.endDate).toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {event.attendees.length} / {event.maxParticipants} participants
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => router.push(`/events/${event._id}`)}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      <FiClock className="mr-2 h-5 w-5" />
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No upcoming meetings</p>
+          )}
+        </div>
+      </div>
+
+      {/* Meeting Stream Modal */}
+      {activeMeeting && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-4xl w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Meeting: {activeMeeting.title}</h2>
+              <button
+                onClick={stopMeeting}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FiClock className="h-5 w-5" />
+              </button>
+            </div>
+            <MeetingStream event={activeMeeting} isCreator={true} />
           </div>
         </div>
       )}

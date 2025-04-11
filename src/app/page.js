@@ -182,72 +182,195 @@ export default function Home() {
       
       {/* Hero Section */}
       <section id="home" className="relative pt-32 pb-20 text-white text-center overflow-hidden">
-  {/* Background image with overlay */}
-  <div className="absolute inset-0">
-    {/* Main background image */}
-    <img 
-      src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3" 
-      alt="Background"
-      className="w-full h-full object-cover"
-    />
-    {/* Dark overlay with subtle pattern */}
-    <div 
-      className="absolute inset-0 bg-black/50"
-      style={{
-        backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')",
-      }}
-    ></div>
-  </div>
-  
-  <div className="relative z-10 max-w-4xl mx-auto px-6">
-    <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
-      Connect. <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">Learn.</span> Grow.
-    </h1>
-    <p className="text-xl md:text-2xl text-gray-300 mb-8 animate-fade-in-delayed">
-      Join our community of professionals and accelerate your career growth
-    </p>
-    <form onSubmit={handleSearch} className="relative mb-12 transform hover:scale-105 transition-transform duration-300">
-      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search for interviews, mentors, or resources..."
-        className="w-full py-4 pl-12 pr-4 rounded-full bg-white/10 backdrop-blur-md text-white placeholder-gray-400 border border-white/20 focus:border-white/40 transition-all outline-none"
-      />
-    </form>
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 mt-12">
-      {[
-        {
-          icon: <Users className="w-8 h-8" />,
-          count: '10,000+',
-          label: 'Alumni',
-        },
-        {
-          icon: <BookOpen className="w-8 h-8" />,
-          count: '5,000+',
-          label: 'Resources',
-        },
-        {
-          icon: <Users2 className="w-8 h-8" />,
-          count: '1,000+',
-          label: 'Active Mentors',
-        },
-      ].map((stat, index) => (
-        <div
-          key={index}
-          className="bg-white/10 backdrop-blur-md rounded-lg p-4 md:p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
-        >
-          <div className="flex justify-center mb-4 text-indigo-400">
-            {stat.icon}
-          </div>
-          <div className="text-3xl md:text-4xl font-bold mb-2">{stat.count}</div>
-          <div className="text-gray-300 text-sm md:text-base">{stat.label}</div>
+        {/* Background image with overlay */}
+        <div className="absolute inset-0">
+          <img 
+            src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3" 
+            alt="Career switching background"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/60"></div>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+        
+        <div className="relative z-10 max-w-4xl mx-auto px-6">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
+            Transform Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">Career</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-gray-300 mb-8 animate-fade-in-delayed">
+            Your journey to a new career starts here. Connect with mentors, access resources, and join a community of successful career switchers.
+          </p>
+          <form onSubmit={handleSearch} className="relative mb-12 transform hover:scale-105 transition-transform duration-300">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for career paths, skills, or mentors..."
+              className="w-full py-4 pl-12 pr-4 rounded-full bg-white/10 backdrop-blur-md text-white placeholder-gray-400 border border-white/20 focus:border-white/40 transition-all outline-none"
+            />
+          </form>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 mt-12">
+            {[
+              {
+                icon: <Users className="w-8 h-8" />,
+                count: '10,000+',
+                label: 'Career Switchers',
+              },
+              {
+                icon: <BookOpen className="w-8 h-8" />,
+                count: '5,000+',
+                label: 'Learning Resources',
+              },
+              {
+                icon: <Users2 className="w-8 h-8" />,
+                count: '1,000+',
+                label: 'Industry Mentors',
+              },
+            ].map((stat, index) => (
+              <div
+                key={index}
+                className="bg-white/10 backdrop-blur-md rounded-lg p-4 md:p-6 transform hover:scale-105 transition-all duration-300 hover:shadow-lg"
+              >
+                <div className="flex justify-center mb-4 text-indigo-400">
+                  {stat.icon}
+                </div>
+                <div className="text-3xl md:text-4xl font-bold mb-2">{stat.count}</div>
+                <div className="text-gray-300 text-sm md:text-base">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Career Paths Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center mb-12">Explore Career Paths</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                title: 'Tech & Software',
+                description: 'Transition to software development, data science, or cybersecurity',
+                icon: <Github className="w-8 h-8" />,
+                color: 'from-blue-500 to-indigo-600'
+              },
+              {
+                title: 'Business & Management',
+                description: 'Move into project management, consulting, or entrepreneurship',
+                icon: <Users className="w-8 h-8" />,
+                color: 'from-green-500 to-emerald-600'
+              },
+              {
+                title: 'Creative & Design',
+                description: 'Pursue UX/UI design, digital marketing, or content creation',
+                icon: <MessageSquare className="w-8 h-8" />,
+                color: 'from-purple-500 to-pink-600'
+              }
+            ].map((path, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+                <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${path.color} flex items-center justify-center mb-4`}>
+                  {path.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-2">{path.title}</h3>
+                <p className="text-gray-600 mb-4">{path.description}</p>
+                <Link href={`/career-paths/${path.title.toLowerCase().replace(/ & /g, '-')}`}>
+                  <button className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center">
+                    Explore Path <ArrowRight className="ml-2" size={16} />
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Success Stories Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center mb-12">Success Stories</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[
+              {
+                name: 'Sarah Johnson',
+                from: 'Marketing',
+                to: 'Software Developer',
+                image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3',
+                quote: 'The mentorship program helped me transition from marketing to software development in just 6 months.'
+              },
+              {
+                name: 'Michael Chen',
+                from: 'Finance',
+                to: 'UX Designer',
+                image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3',
+                quote: 'I found my passion in UX design through the career exploration resources and community support.'
+              }
+            ].map((story, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="relative h-48">
+                  <img 
+                    src={story.image} 
+                    alt={story.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 mr-4"></div>
+                    <div>
+                      <h3 className="font-bold">{story.name}</h3>
+                      <p className="text-sm text-gray-600">{story.from} → {story.to}</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 italic">"{story.quote}"</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Resources Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center mb-12">Career Resources</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                title: 'Skill Assessment',
+                description: 'Take our career assessment to identify your transferable skills',
+                icon: <Star className="w-8 h-8" />,
+                link: '/assessments'
+              },
+              {
+                title: 'Learning Paths',
+                description: 'Structured courses and resources for your target career',
+                icon: <BookOpen className="w-8 h-8" />,
+                link: '/learning-paths'
+              },
+              {
+                title: 'Career Events',
+                description: 'Workshops, webinars, and networking events',
+                icon: <Calendar className="w-8 h-8" />,
+                link: '/events'
+              }
+            ].map((resource, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300">
+                <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                  {resource.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-2">{resource.title}</h3>
+                <p className="text-gray-600 mb-4">{resource.description}</p>
+                <Link href={resource.link}>
+                  <button className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center">
+                    Get Started <ArrowRight className="ml-2" size={16} />
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -255,38 +378,44 @@ export default function Home() {
         <div className="mb-16">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
-            <Link href="/student/events" className="text-indigo-600 hover:text-indigo-500 flex items-center">
+            <Link href="/events" className="text-indigo-600 hover:text-indigo-500 flex items-center">
               View all events <FiArrowRight className="ml-2" />
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {events.slice(0, 3).map((event) => (
-              <div key={event._id} className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="p-6">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                      <FiCalendar className="h-6 w-6 text-white" />
+              <Link 
+                key={event._id} 
+                href={`/events/${event._id}`}
+                className="block"
+              >
+                <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow duration-300">
+                  <div className="p-6">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                        <FiCalendar className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
+                        <p className="text-sm text-gray-500">{event.category}</p>
+                      </div>
                     </div>
-                    <div className="ml-4">
-                      <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
-                      <p className="text-sm text-gray-500">{event.category}</p>
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-500">{event.description}</p>
                     </div>
-                  </div>
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-500">{event.description}</p>
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <FiCalendar className="flex-shrink-0 mr-1.5 h-5 w-5" />
-                      <span>{new Date(event.startDate).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <FiUsers className="flex-shrink-0 mr-1.5 h-5 w-5" />
-                      <span>{event.attendees?.length || 0} / {event.maxParticipants}</span>
+                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <FiCalendar className="flex-shrink-0 mr-1.5 h-5 w-5" />
+                        <span>{new Date(event.startDate).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <FiUsers className="flex-shrink-0 mr-1.5 h-5 w-5" />
+                        <span>{event.attendees?.length || 0} / {event.maxParticipants}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

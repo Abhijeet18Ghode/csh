@@ -2,40 +2,24 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { connectDB } from '@/lib/db';
 import Event from '@/models/Event';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     await connectDB();
 
-    // Fetch all events and populate attendees
     const events = await Event.find({})
+      .sort({ startDate: 1 }) // Sort by start date
       .populate('attendees', 'name email')
-      .sort({ startDate: 1 });
+      .populate('createdBy', 'name email');
 
-    // Check if the current user is attending each event
-    const eventsWithAttendanceStatus = events.map(event => ({
-      ...event.toObject(),
-      isAttending: event.attendees.some(user => user._id.toString() === session.user.id)
-    }));
-
-    return new Response(JSON.stringify(eventsWithAttendanceStatus), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 

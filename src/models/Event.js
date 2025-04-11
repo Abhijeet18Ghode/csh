@@ -41,6 +41,21 @@ const eventSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  meetingDetails: {
+    type: {
+      type: String,
+      enum: ['in-person', 'online', 'hybrid'],
+      default: 'in-person',
+    },
+    platform: {
+      type: String,
+      enum: ['zoom', 'google-meet', 'microsoft-teams', 'other'],
+    },
+    meetingLink: String,
+    meetingId: String,
+    meetingPassword: String,
+    meetingInstructions: String,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
