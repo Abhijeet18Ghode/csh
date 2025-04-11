@@ -32,6 +32,8 @@ export async function GET() {
   }
 }
 
+
+
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -46,9 +48,9 @@ export async function POST(request) {
     console.log('Received event data:', data);
 
     // Validate required fields
-    const requiredFields = ['title', 'description', 'date', 'time', 'location', 'maxParticipants'];
+    const requiredFields = ['title', 'description', 'startDate', 'endDate', 'location', 'maxParticipants'];
     const missingFields = requiredFields.filter(field => !data[field]);
-    
+
     if (missingFields.length > 0) {
       return new Response(JSON.stringify({ 
         error: 'Missing required fields',
@@ -61,21 +63,12 @@ export async function POST(request) {
 
     await connectDB();
 
-    // Convert date and time to startDate and endDate
-    const [hours, minutes] = data.time.split(':');
-    const startDate = new Date(data.date);
-    startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-    // Set end date to 1 hour after start date by default
-    const endDate = new Date(startDate);
-    endDate.setHours(endDate.getHours() + 1);
-
     const event = new Event({
       title: data.title,
       description: data.description,
-      category: 'webinar', // Default category
-      startDate: startDate,
-      endDate: endDate,
+      category: data.category || 'webinar',
+      startDate: new Date(data.startDate),
+      endDate: new Date(data.endDate),
       location: data.location,
       maxParticipants: parseInt(data.maxParticipants),
       createdBy: session.user.id,
@@ -84,7 +77,7 @@ export async function POST(request) {
 
     await event.save();
     console.log('Event created successfully:', event);
-    
+
     return new Response(JSON.stringify(event), {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
@@ -99,4 +92,4 @@ export async function POST(request) {
       headers: { 'Content-Type': 'application/json' },
     });
   }
-} 
+}
