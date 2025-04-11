@@ -40,6 +40,7 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.id || user._id;
         token.role = user.role;
         token.verified = user.verified;
       }
@@ -47,6 +48,7 @@ export const authOptions = {
     },
     async session({ session, token }) {
       if (token) {
+        session.user.id = token.id;
         session.user.role = token.role;
         session.user.verified = token.verified;
       }

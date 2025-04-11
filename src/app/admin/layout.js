@@ -92,20 +92,22 @@ export default function AdminLayout({ children }) {
           transition={{ delay: 0.4 }}
           className="px-6 py-4 border-b border-indigo-700/30 flex items-center"
         >
-          <div className="relative">
-            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white">
-              {session?.user?.name?.charAt(0) || 'A'}
+          <Link href="/admin/profile" className="flex items-center w-full">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white">
+                {session?.user?.name?.charAt(0) || 'A'}
+              </div>
+              <motion.div 
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-indigo-900"
+              ></motion.div>
             </div>
-            <motion.div 
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-indigo-900"
-            ></motion.div>
-          </div>
-          <div className="ml-3">
-            <p className="text-white font-medium">{session?.user?.name || 'Admin'}</p>
-            <p className="text-xs text-blue-200">Alumni Administrator</p>
-          </div>
+            <div className="ml-3">
+              <p className="text-white font-medium">{session?.user?.name || 'Admin'}</p>
+              <p className="text-xs text-blue-200">Alumni Administrator</p>
+            </div>
+          </Link>
         </motion.div>
         
         {/* Navigation */}
@@ -205,19 +207,21 @@ export default function AdminLayout({ children }) {
       whileTap={{ scale: 0.98 }}
       className="flex items-center space-x-3 bg-white px-4 py-2 rounded-full cursor-pointer shadow-sm border border-blue-100/50 hover:shadow-md transition-shadow"
     >
-      <div className="relative">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-600 font-medium">
-          {session?.user?.name?.charAt(0) || 'A'}
+      <Link href="/admin/profile" className="flex items-center space-x-3">
+        <div className="relative">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center text-indigo-600 font-medium">
+            {session?.user?.name?.charAt(0) || 'A'}
+          </div>
+          <div className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-green-500 ring-2 ring-white"></div>
         </div>
-        <div className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-green-500 ring-2 ring-white"></div>
-      </div>
-      <div className="text-left">
-        <p className="text-sm font-medium text-gray-700">{session?.user?.name || 'Admin'}</p>
-        <p className="text-xs text-gray-500">Admin</p>
-      </div>
-      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
+        <div className="text-left">
+          <p className="text-sm font-medium text-gray-700">{session?.user?.name || 'Admin'}</p>
+          <p className="text-xs text-gray-500">Admin</p>
+        </div>
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </Link>
     </motion.div>
   </motion.div>
   
