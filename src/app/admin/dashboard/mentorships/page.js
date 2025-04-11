@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { FaSpinner, FaSearch, FaFilter, FaCheck, FaTimes, FaCalendarAlt, FaUserGraduate, FaUserTie, FaEdit, FaTrash, FaComment } from 'react-icons/fa';
+import { FaSpinner, FaSearch, FaFilter, FaCheck, FaTimes, FaCalendarAlt, FaUserGraduate, FaUserTie, FaEdit, FaTrash, FaComment, FaStar } from 'react-icons/fa';
 import { format } from 'date-fns';
 
 export default function MentorshipManagement() {
@@ -15,6 +15,7 @@ export default function MentorshipManagement() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [selectedMentorship, setSelectedMentorship] = useState(null);
   const [feedback, setFeedback] = useState({ rating: 0, comment: '' });
+  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     fetchMentorships();
@@ -89,7 +90,7 @@ export default function MentorshipManagement() {
       
       setShowFeedbackModal(false);
       setFeedback({ rating: 0, comment: '' });
-      fetchMentorships(); // Refresh the list
+      fetchMentorships();
     } catch (error) {
       console.error('Error submitting feedback:', error);
     }
@@ -106,260 +107,366 @@ export default function MentorshipManagement() {
       (selectedRole === 'student' && mentorship.studentId === session?.user?.id) ||
       (selectedRole === 'mentor' && mentorship.mentorId === session?.user?.id);
     
-    return matchesSearch && matchesStatus && matchesRole;
+    const matchesTab = 
+      activeTab === 'all' ||
+      (activeTab === 'pending' && mentorship.status === 'pending') ||
+      (activeTab === 'active' && ['accepted'].includes(mentorship.status)) ||
+      (activeTab === 'completed' && ['completed', 'cancelled'].includes(mentorship.status));
+    
+    return matchesSearch && matchesStatus && matchesRole && matchesTab;
   });
+
+  const statusCounts = {
+    all: mentorships.length,
+    pending: mentorships.filter(m => m.status === 'pending').length,
+    active: mentorships.filter(m => ['accepted'].includes(m.status)).length,
+    completed: mentorships.filter(m => ['completed', 'cancelled'].includes(m.status)).length,
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <FaSpinner className="animate-spin text-4xl text-blue-500" />
+        <div className="flex flex-col items-center">
+          <FaSpinner className="animate-spin text-4xl text-blue-600 mb-4" />
+          <p className="text-gray-600">Loading mentorship sessions...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Mentorship Management</h1>
+      {/* Global styles for hiding scrollbar */}
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Mentorship Sessions</h1>
+          <p className="text-gray-600 mt-2">
+            Manage and track all mentorship activities
+          </p>
+        </div>
+        {/* <div className="mt-4 md:mt-0">
+          <button
+            onClick={fetchMentorships}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <FaSpinner className={`${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div> */}
+      </div>
       
+      {/* Status Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {['all', 'pending', 'active', 'completed'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                activeTab === tab
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                {statusCounts[tab]}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
       {/* Search and Filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            placeholder="Search by mentor or student name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <FaSearch className="absolute right-3 top-3 text-gray-400" />
-        </div>
-        <div className="relative">
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-          >
-            <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <FaFilter className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
-        </div>
-        <div className="relative">
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-          >
-            <option value="all">All Roles</option>
-            <option value="student">Student</option>
-            <option value="mentor">Mentor</option>
-            <option value="admin">Admin</option>
-          </select>
-          <FaFilter className="absolute right-3 top-3 text-gray-400 pointer-events-none" />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by mentor or student name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="flex gap-2">
+            <div className="relative flex-1 min-w-[150px]">
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <FaFilter className="text-gray-400" />
+              </div>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="appearance-none block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="accepted">Accepted</option>
+                <option value="rejected">Rejected</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div className="relative flex-1 min-w-[150px]">
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <FaFilter className="text-gray-400" />
+              </div>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="appearance-none block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Roles</option>
+                <option value="student">Student</option>
+                <option value="mentor">Mentor</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Mentorship Sessions Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Mentor
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Student
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Session Details
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredMentorships.map((mentorship) => (
-              <tr key={mentorship._id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <FaUserTie className="text-blue-500 mr-2" />
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {mentorship.mentor?.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {mentorship.mentor?.email}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <FaUserGraduate className="text-green-500 mr-2" />
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {mentorship.student?.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {mentorship.student?.email}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center">
-                    <FaCalendarAlt className="text-purple-500 mr-2" />
-                    <div>
-                      <div className="text-sm text-gray-900">
-                        {mentorship.sessionDetails?.date && 
-                          format(new Date(mentorship.sessionDetails.date), 'MMM dd, yyyy')}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {mentorship.sessionDetails?.mode} • {mentorship.sessionDetails?.duration} mins
-                      </div>
-                      {mentorship.sessionDetails?.location && (
-                        <div className="text-sm text-gray-500">
-                          Location: {mentorship.sessionDetails.location}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {filteredMentorships.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="text-gray-400 mb-4">
+              <FaUserTie className="inline-block text-4xl" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No mentorship sessions found</h3>
+            <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto scrollbar-hide">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Participants
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Session Details
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredMentorships.map((mentorship) => (
+                  <tr key={mentorship._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0">
+                          <div className="relative">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <FaUserTie className="text-blue-600" />
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-green-100 flex items-center justify-center border-2 border-white">
+                              <FaUserGraduate className="text-green-600 text-xs" />
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${mentorship.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                      mentorship.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                      mentorship.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                      mentorship.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
-                      'bg-yellow-100 text-yellow-800'}`}>
-                    {mentorship.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    {mentorship.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => handleUpdateStatus(mentorship._id, 'accepted')}
-                          className="text-green-600 hover:text-green-900"
-                          title="Accept"
-                        >
-                          <FaCheck />
-                        </button>
-                        <button
-                          onClick={() => handleUpdateStatus(mentorship._id, 'rejected')}
-                          className="text-red-600 hover:text-red-900"
-                          title="Reject"
-                        >
-                          <FaTimes />
-                        </button>
-                      </>
-                    )}
-                    {mentorship.status === 'accepted' && (
-                      <button
-                        onClick={() => handleUpdateStatus(mentorship._id, 'completed')}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Mark as Completed"
-                      >
-                        <FaCheck />
-                      </button>
-                    )}
-                    {mentorship.status === 'completed' && !mentorship.feedback?.[`${session.user.role}Feedback`] && (
-                      <button
-                        onClick={() => {
-                          setSelectedMentorship(mentorship);
-                          setShowFeedbackModal(true);
-                        }}
-                        className="text-purple-600 hover:text-purple-900"
-                        title="Provide Feedback"
-                      >
-                        <FaComment />
-                      </button>
-                    )}
-                    {session.user.role === 'admin' && (
-                      <button
-                        onClick={() => handleDeleteMentorship(mentorship._id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {mentorship.mentor?.name}
+                            <span className="text-xs font-normal text-gray-500 ml-2">(Mentor)</span>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {mentorship.student?.name}
+                            <span className="text-xs font-normal text-gray-500 ml-2">(Student)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                          <FaCalendarAlt className="text-purple-600" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {mentorship.sessionDetails?.date && 
+                              format(new Date(mentorship.sessionDetails.date), 'MMM dd, yyyy')}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {mentorship.sessionDetails?.mode} • {mentorship.sessionDetails?.duration} mins
+                          </div>
+                          {mentorship.sessionDetails?.location && (
+                            <div className="text-xs text-gray-400 mt-1">
+                              <span className="font-medium">Location:</span> {mentorship.sessionDetails.location}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className={`px-2 py-1 inline-flex text-xs leading-4 font-semibold rounded-full w-fit 
+                          ${mentorship.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                            mentorship.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            mentorship.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                            mentorship.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
+                            'bg-yellow-100 text-yellow-800'}`}>
+                          {mentorship.status}
+                        </span>
+                        {mentorship.feedback?.mentorFeedback && (
+                          <div className="flex items-center mt-1">
+                            {[...Array(5)].map((_, i) => (
+                              <FaStar 
+                                key={i}
+                                className={`text-xs ${i < mentorship.feedback.mentorFeedback.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end space-x-2">
+                        {mentorship.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleUpdateStatus(mentorship._id, 'accepted')}
+                              className="p-2 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                              title="Accept"
+                            >
+                              <FaCheck className="text-sm" />
+                            </button>
+                            <button
+                              onClick={() => handleUpdateStatus(mentorship._id, 'rejected')}
+                              className="p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                              title="Reject"
+                            >
+                              <FaTimes className="text-sm" />
+                            </button>
+                          </>
+                        )}
+                        {mentorship.status === 'accepted' && (
+                          <button
+                            onClick={() => handleUpdateStatus(mentorship._id, 'completed')}
+                            className="p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                            title="Mark as Completed"
+                          >
+                            <FaCheck className="text-sm" />
+                          </button>
+                        )}
+                        {mentorship.status === 'completed' && !mentorship.feedback?.[`${session.user.role}Feedback`] && (
+                          <button
+                            onClick={() => {
+                              setSelectedMentorship(mentorship);
+                              setShowFeedbackModal(true);
+                            }}
+                            className="p-2 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
+                            title="Provide Feedback"
+                          >
+                            <FaComment className="text-sm" />
+                          </button>
+                        )}
+                        {session.user.role === 'admin' && (
+                          <button
+                            onClick={() => handleDeleteMentorship(mentorship._id)}
+                            className="p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                            title="Delete"
+                          >
+                            <FaTrash className="text-sm" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Feedback Modal */}
       {showFeedbackModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Provide Feedback
-            </h3>
-            <form onSubmit={handleSubmitFeedback}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Rating
-                  </label>
-                  <select
-                    value={feedback.rating}
-                    onChange={(e) => setFeedback({ ...feedback, rating: parseInt(e.target.value) })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value={0}>Select Rating</option>
-                    <option value={1}>1 - Poor</option>
-                    <option value={2}>2 - Fair</option>
-                    <option value={3}>3 - Good</option>
-                    <option value={4}>4 - Very Good</option>
-                    <option value={5}>5 - Excellent</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Comment
-                  </label>
-                  <textarea
-                    value={feedback.comment}
-                    onChange={(e) => setFeedback({ ...feedback, comment: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    rows={4}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="mt-5 flex justify-end space-x-3">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Session Feedback
+                </h3>
                 <button
-                  type="button"
                   onClick={() => setShowFeedbackModal(false)}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="text-gray-400 hover:text-gray-500"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Submit Feedback
+                  <FaTimes />
                 </button>
               </div>
-            </form>
+              <form onSubmit={handleSubmitFeedback}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Rating
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          onClick={() => setFeedback({ ...feedback, rating: star })}
+                          className={`p-2 rounded-full ${feedback.rating >= star ? 'text-yellow-400 bg-yellow-50' : 'text-gray-300 bg-gray-50'}`}
+                        >
+                          <FaStar />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Your Feedback
+                    </label>
+                    <textarea
+                      value={feedback.comment}
+                      onChange={(e) => setFeedback({ ...feedback, comment: e.target.value })}
+                      className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      rows={4}
+                      placeholder="Share your experience with this mentorship session..."
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowFeedbackModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Submit Feedback
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
-} 
+}
