@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const resourceSchema = new mongoose.Schema({
   title: {
@@ -65,7 +65,11 @@ const resourceSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  upvotes: {
+  downloads: {
+    type: Number,
+    default: 0,
+  },
+  shares: {
     type: Number,
     default: 0,
   },
@@ -106,4 +110,6 @@ resourceSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.models.Resource || mongoose.model('Resource', resourceSchema); 
+const Resource = mongoose.models.Resource || mongoose.model('Resource', resourceSchema);
+
+export default Resource; 

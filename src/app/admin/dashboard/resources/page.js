@@ -123,17 +123,17 @@ export default function ResourcesManagement() {
         throw new Error(error.error || 'Failed to create resource');
       }
 
-      setShowAddModal(false);
-      setFormData({
-        title: '',
-        description: '',
-        category: '',
-        type: 'link',
-        url: '',
-        content: '',
+        setShowAddModal(false);
+        setFormData({
+          title: '',
+          description: '',
+          category: '',
+          type: 'link',
+          url: '',
+          content: '',
         file: null,
-      });
-      fetchResources();
+        });
+        fetchResources();
     } catch (error) {
       console.error('Error adding resource:', error);
       alert(error.message || 'Failed to create resource');
@@ -563,9 +563,9 @@ export default function ResourcesManagement() {
                           type="file"
                           accept="video/*"
                           onChange={(e) => setFormData({...formData, file: e.target.files[0]})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                          required
-                        />
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        required
+                      />
                         {formData.file && (
                           <span className="text-sm text-gray-500">{formData.file.name}</span>
                         )}

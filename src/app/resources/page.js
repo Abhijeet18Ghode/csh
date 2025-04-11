@@ -131,7 +131,9 @@ export default function ResourcesPage() {
                     {resource.type === 'video' && <FaVideo className="h-6 w-6 text-indigo-500" />}
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">{resource.title}</h3>
+                    <Link href={`/resources/${resource._id}`}>
+                      <h3 className="text-lg font-medium text-gray-900 hover:text-indigo-600">{resource.title}</h3>
+                    </Link>
                     <p className="text-sm text-gray-500 capitalize">
                       {resource.category.replace(/-/g, ' ')}
                     </p>
@@ -139,6 +141,12 @@ export default function ResourcesPage() {
                 </div>
                 <p className="text-gray-600 mb-4">{resource.description}</p>
                 <div className="flex justify-between items-center">
+                  <Link
+                    href={`/resources/${resource._id}`}
+                    className="text-indigo-600 hover:text-indigo-500 font-medium"
+                  >
+                    View Details
+                  </Link>
                   {resource.type === 'link' && (
                     <a
                       href={resource.url}

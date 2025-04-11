@@ -316,14 +316,12 @@ export default function Home() {
                     <p className="text-sm text-gray-500">{resource.description}</p>
                   </div>
                   <div className="mt-4">
-                    <a
-                      href={resource.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      href={`/resources/${resource._id}`}
                       className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
                     >
                       View Resource →
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
