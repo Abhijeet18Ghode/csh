@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FiSearch, FiBook, FiBookmark, FiBookOpen } from 'react-icons/fi';
+import { FiSearch, FiBook, FiBookmark, FiBookOpen, FiLink, FiFile, FiVideo } from 'react-icons/fi';
+import Link from 'next/link';
 
 export default function ResourcesList() {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredResources, setFilteredResources] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -28,13 +31,22 @@ export default function ResourcesList() {
   }, []);
 
   useEffect(() => {
-    const filtered = resources.filter(resource =>
+    let filtered = resources.filter(resource =>
       resource.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resource.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resource.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(resource => resource.category === selectedCategory);
+    }
+
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(resource => resource.type === selectedType);
+    }
+
     setFilteredResources(filtered);
-  }, [searchTerm, resources]);
+  }, [searchTerm, resources, selectedCategory, selectedType]);
 
   const handleSaveResource = async (resourceId) => {
     try {
@@ -50,6 +62,19 @@ export default function ResourcesList() {
       ));
     } catch (error) {
       console.error('Error saving resource:', error);
+    }
+  };
+
+  const getResourceIcon = (type) => {
+    switch (type) {
+      case 'link':
+        return <FiLink className="h-6 w-6 text-white" />;
+      case 'document':
+        return <FiFile className="h-6 w-6 text-white" />;
+      case 'video':
+        return <FiVideo className="h-6 w-6 text-white" />;
+      default:
+        return <FiBook className="h-6 w-6 text-white" />;
     }
   };
 
@@ -71,8 +96,8 @@ export default function ResourcesList() {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-8">
+        {/* Search and Filters */}
+        <div className="mb-8 space-y-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiSearch className="h-5 w-5 text-gray-400" />
@@ -84,6 +109,29 @@ export default function ResourcesList() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <select
+              className="block w-full sm:w-auto pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              <option value="all">All Categories</option>
+              <option value="resume">Resume</option>
+              <option value="interview">Interview</option>
+              <option value="networking">Networking</option>
+              <option value="skills">Skills</option>
+            </select>
+            <select
+              className="block w-full sm:w-auto pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+            >
+              <option value="all">All Types</option>
+              <option value="link">Links</option>
+              <option value="document">Documents</option>
+              <option value="video">Videos</option>
+            </select>
           </div>
         </div>
 
@@ -97,7 +145,7 @@ export default function ResourcesList() {
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                    <FiBook className="h-6 w-6 text-white" />
+                    {getResourceIcon(resource.type)}
                   </div>
                   <button
                     onClick={() => handleSaveResource(resource._id)}
@@ -111,28 +159,31 @@ export default function ResourcesList() {
                   </button>
                 </div>
                 <div className="mt-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {resource.title}
-                  </h3>
+                  <Link href={`/resources/${resource._id}`}>
+                    <h3 className="text-lg font-medium text-gray-900 hover:text-indigo-600">
+                      {resource.title}
+                    </h3>
+                  </Link>
                   <p className="mt-2 text-sm text-gray-500">
                     {resource.description}
                   </p>
-                  <div className="mt-4">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                       {resource.category}
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {resource.type}
                     </span>
                   </div>
                 </div>
                 <div className="mt-6">
-                  <a
-                    href={resource.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href={`/resources/${resource._id}`}
                     className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500"
                   >
-                    View Resource
+                    View Details
                     <FiBookOpen className="ml-2 h-4 w-4" />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

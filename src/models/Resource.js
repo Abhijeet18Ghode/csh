@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const resourceSchema = new mongoose.Schema({
   title: {
@@ -32,9 +32,17 @@ const resourceSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: function(v) {
-        return this.type !== 'link' || /^https?:\/\/.+\..+/.test(v);
+        if (this.type === 'link') {
+          try {
+            new URL(v);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        }
+        return true;
       },
-      message: 'URL is required for link type resources',
+      message: 'URL is required and must be valid for link type resources',
     },
   },
   content: {
@@ -57,7 +65,11 @@ const resourceSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  upvotes: {
+  downloads: {
+    type: Number,
+    default: 0,
+  },
+  shares: {
     type: Number,
     default: 0,
   },
@@ -98,4 +110,6 @@ resourceSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.models.Resource || mongoose.model('Resource', resourceSchema); 
+const Resource = mongoose.models.Resource || mongoose.model('Resource', resourceSchema);
+
+export default Resource; 

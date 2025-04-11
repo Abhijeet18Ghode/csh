@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   ArrowRight,
+  
   Star,
   MessageSquare,
   Linkedin,
@@ -21,13 +22,18 @@ import {
   Github,
   Mail,
 } from 'lucide-react';
-
+import { FiCalendar, FiBook, FiUsers, FiArrowRight } from 'react-icons/fi';
 import Link from 'next/link';
+
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('resources');
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [mentors, setMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +41,38 @@ export default function Home() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [eventsRes, resourcesRes, mentorsRes] = await Promise.all([
+          fetch('/api/events'),
+          fetch('/api/resources'),
+          fetch('/api/mentors')
+        ]);
+
+        if (!eventsRes.ok || !resourcesRes.ok || !mentorsRes.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const [eventsData, resourcesData, mentorsData] = await Promise.all([
+          eventsRes.json(),
+          resourcesRes.json(),
+          mentorsRes.json()
+        ]);
+
+        setEvents(eventsData);
+        setResources(resourcesData);
+        setMentors(mentorsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const toggleMobileMenu = () => {
@@ -45,6 +83,14 @@ export default function Home() {
     e.preventDefault();
     alert(`Searching for: ${searchQuery}`);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-white">
@@ -203,355 +249,124 @@ export default function Home() {
   </div>
 </section>
       
-      {/* Resources Grid */}
-      <section id="resources" className="py-20 px-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Popular Resources</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">Curated resources to help you excel in your career journey</p>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Upcoming Events */}
+        <div className="mb-16">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
+            <Link href="/student/events" className="text-indigo-600 hover:text-indigo-500 flex items-center">
+              View all events <FiArrowRight className="ml-2" />
+            </Link>
           </div>
-          
-          {/* Tabs */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex bg-white p-1 rounded-xl shadow-sm">
-              {['resources', 'courses', 'guides'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 rounded-lg transition-all ${activeTab === tab ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-600 hover:text-indigo-600'}`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'Complete DSA Interview Preparation',
-                category: 'Data Structures',
-                level: 'Intermediate',
-                image:
-                  'https://images.unsplash.com/photo-1516116216624-53e697fedbea?ixlib=rb-4.0.3',
-                stats: {
-                  views: '14k',
-                  time: '2.5k',
-                  rating: '4.8',
-                },
-              },
-              {
-                title: 'System Design for Senior Engineers',
-                category: 'System Design',
-                level: 'Advanced',
-                image:
-                  'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3',
-                stats: {
-                  views: '12k',
-                  time: '1.8k',
-                  rating: '4.9',
-                },
-              },
-              {
-                title: 'Frontend Development Roadmap',
-                category: 'Web Development',
-                level: 'Beginner',
-                image:
-                  'https://images.unsplash.com/photo-1627398242454-45a1465c2479?ixlib=rb-4.0.3',
-                stats: {
-                  views: '21k',
-                  time: '3.2k',
-                  rating: '4.7',
-                },
-              },
-            ].map((resource, index) => (
-              <div
-                key={index}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={resource.image}
-                    alt={resource.title}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute top-4 right-4 bg-indigo-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-current" />
-                    {resource.stats.rating}
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {events.slice(0, 3).map((event) => (
+              <div key={event._id} className="bg-white overflow-hidden shadow rounded-lg">
                 <div className="p-6">
-                  <div className="flex gap-2 mb-3 flex-wrap">
-                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm">
-                      {resource.category}
-                    </span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                      {resource.level}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-lg mb-4 group-hover:text-indigo-600 transition-colors">
-                    {resource.title}
-                  </h3>
-                  <div className="flex justify-between items-center">
-                    <div className="flex gap-4 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        👁️ {resource.stats.views}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        ⏱️ {resource.stats.time}h
-                      </span>
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                      <FiCalendar className="h-6 w-6 text-white" />
                     </div>
-                    <button className="text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1">
-                      View <ArrowRight className="w-4 h-4" />
-                    </button>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-medium text-gray-900">{event.title}</h3>
+                      <p className="text-sm text-gray-500">{event.category}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-500">{event.description}</p>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <FiCalendar className="flex-shrink-0 mr-1.5 h-5 w-5" />
+                      <span>{new Date(event.startDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <FiUsers className="flex-shrink-0 mr-1.5 h-5 w-5" />
+                      <span>{event.attendees?.length || 0} / {event.maxParticipants}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          
-          <div className="text-center mt-12">
-            <button className="border-2 border-indigo-600 text-indigo-600 px-8 py-3 rounded-full hover:bg-indigo-600 hover:text-white transition-all duration-300 flex items-center gap-2 mx-auto">
-              Browse all resources <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
         </div>
-      </section>
-      
-      {/* Featured Mentors */}
-      <section id="mentorship" className="py-20 px-6 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">Featured Mentors</h2>
-              <p className="text-gray-600">Connect with experienced professionals in your field</p>
-            </div>
-            <a
-              href="#"
-              className="group flex items-center text-indigo-600 hover:text-indigo-700 transition-colors font-medium"
-            >
-              View all mentors
-              <ChevronRight className="w-5 h-5 ml-1 transform group-hover:translate-x-1 transition-transform" />
-            </a>
+
+        {/* Resources */}
+        <div className="mb-16">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Resources</h2>
+            <Link href="/student/resources" className="text-indigo-600 hover:text-indigo-500 flex items-center">
+              View all resources <FiArrowRight className="ml-2" />
+            </Link>
           </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                name: 'Sarah Chen',
-                role: 'Senior Software Engineer',
-                company: 'Google',
-                image:
-                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3',
-                expertise: ['Frontend', 'Interview Prep'],
-                rating: '4.9',
-                sessions: '120+',
-              },
-              {
-                name: 'Michael Park',
-                role: 'Tech Lead',
-                company: 'Microsoft',
-                image:
-                  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3',
-                expertise: ['Backend', 'System Design'],
-                rating: '4.8',
-                sessions: '95+',
-              },
-              {
-                name: 'Emily Rodriguez',
-                role: 'Product Manager',
-                company: 'Amazon',
-                image:
-                  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3',
-                expertise: ['Product Designer', 'Career Growth'],
-                rating: '4.7',
-                sessions: '80+',
-              },
-              {
-                name: 'David Kim',
-                role: 'Engineering Manager',
-                company: 'Meta',
-                image:
-                  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3',
-                expertise: ['Leadership', 'Career Growth'],
-                rating: '4.9',
-                sessions: '150+',
-              },
-            ].map((mentor, index) => (
-              <div
-                key={index}
-                className="group bg-gray-50 rounded-xl p-6 text-center transform hover:-translate-y-2 transition-all duration-300 hover:shadow-xl border border-transparent hover:border-indigo-100"
-              >
-                <div className="relative w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-2 border-white shadow-md">
-                  <img
-                    src={mentor.image}
-                    alt={mentor.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
-                  />
-                </div>
-                <h3 className="font-bold text-lg mb-1 group-hover:text-indigo-600 transition-colors">
-                  {mentor.name}
-                </h3>
-                <p className="text-gray-600 text-sm">{mentor.role}</p>
-                <p className="text-gray-500 text-xs mb-3">{mentor.company}</p>
-                
-                <div className="flex justify-center gap-1 mb-4 flex-wrap">
-                  {mentor.expertise.map((skill, i) => (
-                    <span key={i} className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-                
-                <div className="flex justify-between text-xs text-gray-500 mb-4">
-                  <span className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                    {mentor.rating}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MessageSquare className="w-4 h-4 text-indigo-500" />
-                    {mentor.sessions}
-                  </span>
-                </div>
-                
-                <button className="w-full border-2 border-indigo-600 text-indigo-600 px-6 py-2 rounded-full group-hover:bg-gradient-to-r group-hover:from-indigo-600 group-hover:to-purple-600 group-hover:text-white group-hover:border-transparent transition-all duration-300">
-                  Connect
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* Testimonials */}
-      <section className="py-20 px-6 bg-gradient-to-r from-indigo-50 to-purple-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-12">What Our Alumni Say</h2>
-          
-          <div className="bg-white rounded-xl shadow-md p-8 mb-8 transform hover:scale-[1.02] transition-transform duration-300">
-            <div className="flex justify-center mb-6">
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star key={star} className="w-6 h-6 text-yellow-500 fill-current" />
-                ))}
-              </div>
-            </div>
-            <p className="text-gray-700 text-lg mb-6">
-              "The mentorship program completely transformed my approach to technical interviews. Within 3 months of working with my mentor, I landed offers from two FAANG companies!"
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
-                <img 
-                  src="https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-4.0.3" 
-                  alt="Alex Johnson" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="text-left">
-                <h4 className="font-bold">Alex Johnson</h4>
-                <p className="text-gray-600 text-sm">Software Engineer at Apple</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex justify-center gap-2">
-            {[1, 2, 3].map((dot) => (
-              <button 
-                key={dot} 
-                className={`w-3 h-3 rounded-full ${dot === 1 ? 'bg-indigo-600' : 'bg-gray-300'}`}
-              ></button>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* Upcoming Events */}
-      <section id="events" className="py-20 px-6 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-12">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">Upcoming Events</h2>
-              <p className="text-gray-600">Join our community events and networking sessions</p>
-            </div>
-            <a
-              href="#"
-              className="group flex items-center text-indigo-600 hover:text-indigo-700 transition-colors font-medium"
-            >
-              View all events
-              <ChevronRight className="w-5 h-5 ml-1 transform group-hover:translate-x-1 transition-transform" />
-            </a>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            {[
-              {
-                title: 'Tech Interview Masterclass',
-                date: 'Mar 15, 2023',
-                time: '2:00 PM PST',
-                location: 'Online',
-                image:
-                  'https://media.istockphoto.com/id/1070079846/photo/female-candidate-interview-with-hr-managers-in-office.jpg?s=1024x1024&w=is&k=20&c=066tdkp4ss5uD9Sjls470NnHJtvg2l7D4gbP8X4xAks=',
-                description: 'Learn the best strategies to ace your technical interviews from industry experts.',
-                attendees: '250+ registered',
-              },
-              {
-                title: 'Career Growth in AI/ML',
-                date: 'Mar 18, 2023',
-                time: '10:00 AM PST',
-                location: 'Online',
-                image:
-                  'https://media.istockphoto.com/id/1452604857/photo/businessman-touching-the-brain-working-of-artificial-intelligence-automation-predictive.jpg?s=1024x1024&w=is&k=20&c=Mz2G15YAcE09_ywaRc43p9jmG2urk69uqyopTbaG4cI=',
-                description: 'Panel discussion with AI/ML leaders on career progression in this fast-growing field.',
-                attendees: '180+ registered',
-              },
-            ].map((event, index) => (
-              <div
-                key={index}
-                className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="font-bold text-xl text-white group-hover:text-indigo-300 transition-colors">
-                      {event.title}
-                    </h3>
-                    <p className="text-gray-300 text-sm">{event.description}</p>
-                  </div>
-                </div>
-                <div className="p-8">
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <Calendar className="w-5 h-5 text-indigo-600" />
-                      <span>{event.date}</span>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {resources.slice(0, 3).map((resource) => (
+              <div key={resource._id} className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                      <FiBook className="h-6 w-6 text-white" />
                     </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <Clock className="w-5 h-5 text-indigo-600" />
-                      <span>{event.time}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <MapPin className="w-5 h-5 text-indigo-600" />
-                      <span>{event.location}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-gray-600">
-                      <Users className="w-5 h-5 text-indigo-600" />
-                      <span>{event.attendees}</span>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-medium text-gray-900">{resource.title}</h3>
+                      <p className="text-sm text-gray-500">{resource.category}</p>
                     </div>
                   </div>
-                  <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2">
-                    Register Now <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-500">{resource.description}</p>
+                  </div>
+                  <div className="mt-4">
+                    <Link
+                      href={`/resources/${resource._id}`}
+                      className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                    >
+                      View Resource →
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+
+        {/* Mentors */}
+        <div>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">Featured Mentors</h2>
+            <Link href="/student/mentors" className="text-indigo-600 hover:text-indigo-500 flex items-center">
+              View all mentors <FiArrowRight className="ml-2" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {mentors.slice(0, 3).map((mentor) => (
+              <div key={mentor._id} className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                      <FiUsers className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-medium text-gray-900">{mentor.name}</h3>
+                      <p className="text-sm text-gray-500">{mentor.profile?.position} at {mentor.profile?.company}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-500">{mentor.profile?.bio}</p>
+                  </div>
+                  <div className="mt-4">
+                    <Link
+                      href={`/student/mentors/${mentor._id}`}
+                      className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                    >
+                      View Profile →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       
       {/* CTA Section */}
       <section className="relative py-20 px-6 text-white overflow-hidden">
