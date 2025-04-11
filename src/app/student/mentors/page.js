@@ -106,7 +106,7 @@ export default function MentorsList() {
                 <div className="mt-4">
                   <h4 className="text-sm font-medium text-gray-900">Expertise</h4>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {mentor.expertise.map((skill, index) => (
+                    {mentor.profile?.expertise?.map((skill, index) => (
                       <span
                         key={index}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"

@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'alumni', 'admin'],
+    enum: ['student', 'alumni', 'admin', 'mentor'],
     required: true,
   },
   verified: {
@@ -29,6 +29,8 @@ const userSchema = new mongoose.Schema({
     currentCompany: String,
     position: String,
     skills: [String],
+    expertise: [String],
+    yearsOfExperience: Number,
     bio: String,
     avatar: String,
   },

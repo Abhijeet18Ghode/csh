@@ -114,20 +114,20 @@ export default function Home() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
             {[
-              {name: 'Home', href: '#home'},
+              {name: 'Home', href: '/'},
+              {name: 'Mentors', href: '/mentors'},
               {name: 'Resources', href: '#resources'},
-              {name: 'Mentorship', href: '#mentorship'},
               {name: 'Events', href: '#events'},
               {name: 'Alumni Network', href: '#network'},
             ].map((item) => (
-              <a
+              <Link
                 key={item.name}
                 href={item.href}
                 className="text-gray-600 hover:text-indigo-600 transition-colors relative group"
               >
                 {item.name}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
-              </a>
+              </Link>
             ))}
           </nav>
           
@@ -152,20 +152,20 @@ export default function Home() {
           <div className="md:hidden bg-white shadow-lg rounded-b-lg px-6 py-4 absolute top-full left-0 right-0 z-50 animate-slideDown">
             <div className="flex flex-col gap-4">
               {[
-                {name: 'Home', href: '#home'},
+                {name: 'Home', href: '/'},
+                {name: 'Mentors', href: '/mentors'},
                 {name: 'Resources', href: '#resources'},
-                {name: 'Mentorship', href: '#mentorship'},
                 {name: 'Events', href: '#events'},
                 {name: 'Alumni Network', href: '#network'},
               ].map((item) => (
-                <a
+                <Link
                   key={item.name}
                   href={item.href}
                   className="text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}
-                </a>
+                </Link>
               ))}
               <div className="flex gap-4 mt-4">
                 <button className="flex-1 text-gray-700 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition-colors">
