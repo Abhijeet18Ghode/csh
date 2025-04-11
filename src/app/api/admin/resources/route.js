@@ -42,7 +42,31 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { title, description, category, type, url, content } = body;
+    const { title, description, category, type, url, content, tags } = body;
+
+    // Validate required fields
+    if (!title || !description || !category || !type) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate URL for link type resources
+    if (type === 'link' && !url) {
+      return new Response(JSON.stringify({ error: 'URL is required for link type resources' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate content for document type resources
+    if (type === 'document' && !content) {
+      return new Response(JSON.stringify({ error: 'Content is required for document type resources' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     await connectDB();
     const resource = new Resource({
@@ -52,7 +76,9 @@ export async function POST(req) {
       type,
       url,
       content,
-      uploadedBy: session.user._id,
+      tags,
+      uploadedBy: session.user.id, // Use session.user.id instead of session.user._id
+      status: 'approved', // Auto-approve admin resources
     });
 
     await resource.save();
@@ -63,7 +89,7 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error('Error creating resource:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+    return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

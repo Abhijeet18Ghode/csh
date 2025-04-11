@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FaSearch, FaEdit, FaTrash, FaPlus, FaFileAlt, FaLink, FaVideo, FaTimes, FaFilter, FaSort } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaPlus, FaFileAlt, FaLink, FaVideo, FaTimes, FaFilter, FaSort, FaUpload, FaEye } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip } from 'react-tooltip';
 
@@ -21,7 +21,12 @@ export default function ResourcesManagement() {
     type: 'link',
     url: '',
     content: '',
+    file: null,
   });
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
+  const [previewResource, setPreviewResource] = useState(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
   const categories = [
     'all',
@@ -55,31 +60,83 @@ export default function ResourcesManagement() {
     }
   };
 
+  const handleFileUpload = async (file, type) => {
+    try {
+      setUploadProgress(0);
+      setUploadError(null);
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('resourceType', type === 'video' ? 'video' : 'auto');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      return data.url;
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError('Failed to upload file. Please try again.');
+      throw error;
+    }
+  };
+
   const handleAddResource = async (e) => {
     e.preventDefault();
     try {
+      // Validate required fields
+      if (!formData.title || !formData.description || !formData.category || !formData.type) {
+        alert('Please fill in all required fields');
+        return;
+      }
+
+      let url = formData.url;
+      let content = formData.content;
+
+      // Handle file uploads
+      if (formData.type === 'document' && formData.file) {
+        content = await handleFileUpload(formData.file, 'document');
+      } else if (formData.type === 'video' && formData.file) {
+        url = await handleFileUpload(formData.file, 'video');
+      }
+
       const response = await fetch('/api/admin/resources', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          url,
+          content,
+        }),
       });
 
-      if (response.ok) {
-        setShowAddModal(false);
-        setFormData({
-          title: '',
-          description: '',
-          category: '',
-          type: 'link',
-          url: '',
-          content: '',
-        });
-        fetchResources();
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create resource');
       }
+
+      setShowAddModal(false);
+      setFormData({
+        title: '',
+        description: '',
+        category: '',
+        type: 'link',
+        url: '',
+        content: '',
+        file: null,
+      });
+      fetchResources();
     } catch (error) {
       console.error('Error adding resource:', error);
+      alert(error.message || 'Failed to create resource');
     }
   };
 
@@ -143,6 +200,11 @@ export default function ResourcesManagement() {
     const matchesCategory = selectedCategory === 'all' || resource.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handlePreview = (resource) => {
+    setPreviewResource(resource);
+    setShowPreviewModal(true);
+  };
 
   if (loading) {
     return (
@@ -288,13 +350,16 @@ export default function ResourcesManagement() {
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-3">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            data-tooltip-id="edit-tooltip"
-                            data-tooltip-content="Edit"
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-3">
+                          <button
+                            onClick={() => handlePreview(resource)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                            title="Preview"
+                          >
+                            <FaEye />
+                          </button>
+                          <button
                             onClick={() => {
                               setCurrentResource(resource);
                               setFormData({
@@ -307,20 +372,18 @@ export default function ResourcesManagement() {
                               });
                               setShowEditModal(true);
                             }}
-                            className="text-indigo-600 hover:text-indigo-900 p-2 rounded-full hover:bg-indigo-50 transition-colors"
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Edit"
                           >
                             <FaEdit />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            data-tooltip-id="delete-tooltip"
-                            data-tooltip-content="Delete"
+                          </button>
+                          <button
                             onClick={() => handleDeleteResource(resource._id)}
-                            className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-50 transition-colors"
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
                           >
                             <FaTrash />
-                          </motion.button>
+                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -460,21 +523,67 @@ export default function ResourcesManagement() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                         placeholder="https://example.com/resource"
                         required
+                        pattern="https?://.+"
                       />
+                      <p className="mt-1 text-xs text-gray-500">Must be a valid URL starting with http:// or https://</p>
                     </div>
                   )}
                   {formData.type === 'document' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Content *</label>
-                      <textarea
-                        value={formData.content}
-                        onChange={(e) => setFormData({...formData, content: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                        rows="5"
-                        placeholder="Enter the document content here..."
-                        required
-                      />
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Document *</label>
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) => setFormData({...formData, file: e.target.files[0]})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                          required
+                        />
+                        {formData.file && (
+                          <span className="text-sm text-gray-500">{formData.file.name}</span>
+                        )}
+                      </div>
+                      {uploadProgress > 0 && (
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-indigo-600 h-2.5 rounded-full"
+                              style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
                     </div>
+                  )}
+                  {formData.type === 'video' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Video *</label>
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="file"
+                          accept="video/*"
+                          onChange={(e) => setFormData({...formData, file: e.target.files[0]})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                          required
+                        />
+                        {formData.file && (
+                          <span className="text-sm text-gray-500">{formData.file.name}</span>
+                        )}
+                      </div>
+                      {uploadProgress > 0 && (
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className="bg-indigo-600 h-2.5 rounded-full"
+                              style={{ width: `${uploadProgress}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {uploadError && (
+                    <div className="text-red-500 text-sm mt-2">{uploadError}</div>
                   )}
                   <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                     <motion.button
@@ -597,7 +706,9 @@ export default function ResourcesManagement() {
                         onChange={(e) => setFormData({...formData, url: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                         required
+                        pattern="https?://.+"
                       />
+                      <p className="mt-1 text-xs text-gray-500">Must be a valid URL starting with http:// or https://</p>
                     </div>
                   )}
                   {formData.type === 'document' && (
@@ -638,6 +749,60 @@ export default function ResourcesManagement() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showPreviewModal && previewResource && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">{previewResource.title}</h3>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="p-4">
+              {previewResource.type === 'document' && (
+                <div className="h-[70vh]">
+                  <iframe
+                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewResource.content)}&embedded=true`}
+                    className="w-full h-full"
+                    title="Document Preview"
+                  />
+                </div>
+              )}
+              {previewResource.type === 'video' && (
+                <div className="aspect-w-16 aspect-h-9">
+                  <video
+                    src={previewResource.url}
+                    controls
+                    className="w-full h-full"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              )}
+              {previewResource.type === 'link' && (
+                <div className="h-[70vh]">
+                  <iframe
+                    src={previewResource.url}
+                    className="w-full h-full"
+                    title="Link Preview"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t border-gray-200">
+              <div className="text-sm text-gray-500">
+                <p><strong>Category:</strong> {previewResource.category}</p>
+                <p><strong>Type:</strong> {previewResource.type}</p>
+                <p><strong>Description:</strong> {previewResource.description}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Tooltip id="edit-tooltip" place="top" effect="solid" className="z-50" />
       <Tooltip id="delete-tooltip" place="top" effect="solid" className="z-50" />

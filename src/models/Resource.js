@@ -32,9 +32,17 @@ const resourceSchema = new mongoose.Schema({
     trim: true,
     validate: {
       validator: function(v) {
-        return this.type !== 'link' || /^https?:\/\/.+\..+/.test(v);
+        if (this.type === 'link') {
+          try {
+            new URL(v);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        }
+        return true;
       },
-      message: 'URL is required for link type resources',
+      message: 'URL is required and must be valid for link type resources',
     },
   },
   content: {

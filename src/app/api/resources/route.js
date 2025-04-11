@@ -1,40 +1,23 @@
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { connectDB } from '@/lib/db';
+import { NextResponse } from 'next/server';
+import connectDB from '@/lib/mongodb';
 import Resource from '@/models/Resource';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     await connectDB();
+    
+    // Fetch all approved resources
+    const resources = await Resource.find({ status: 'approved' })
+      .sort({ createdAt: -1 })
+      .select('title description category type url content')
+      .lean();
 
-    // Fetch all resources
-    const resources = await Resource.find({})
-      .populate('savedBy', 'name email')
-      .sort({ createdAt: -1 });
-
-    // Check if the current user has saved each resource
-    const resourcesWithSavedStatus = resources.map(resource => ({
-      ...resource.toObject(),
-      isSaved: resource.savedBy.some(user => user._id.toString() === session.user.id)
-    }));
-
-    return new Response(JSON.stringify(resourcesWithSavedStatus), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json(resources);
   } catch (error) {
     console.error('Error fetching resources:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json(
+      { error: 'Failed to fetch resources' },
+      { status: 500 }
+    );
   }
 } 
